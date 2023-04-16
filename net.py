@@ -3,21 +3,23 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Net(nn.Module):
-    def __init__(self):
+    def __init__(self, num_experts, input_size, hidden_size, output_size):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
-        self.conv3 = nn.Conv2d(64, 128, 3, padding=1)
-        self.fc1 = nn.Linear(128 * 7 * 7, 512)
-        self.fc2 = nn.Linear(512, 64)
-        self.fc3 = nn.Linear(64, 1)
+        self.num_experts = num_experts
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.experts = nn.ModuleList([nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, output_size)
+        ) for _ in range(num_experts)])
+        self.gates = nn.Sequential(
+            nn.Linear(input_size, num_experts),
+            nn.Softmax(dim=1)
+        )
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = x.view(-1, 128 * 7 * 7)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x.squeeze()
+        gates = self.gates(x)
+        expert_outputs = torch.stack([expert(x) for expert in self.experts], dim=1)
+        return torch.sum(gates.unsqueeze(-1) * expert_outputs, dim=1)
