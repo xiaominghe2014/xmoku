@@ -8,10 +8,6 @@ import torch
 import numpy as np
 # 加载模型
 # 实例化模型
-input_size = 3
-hidden_size = 128
-num_layers = 1
-num_classes = 3
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = CNNModel()
 model.load_state_dict(torch.load('model/model.pth'))
@@ -21,10 +17,12 @@ model.eval()
 
 def analysis(board):
     data_tensor = torch.Tensor(board).unsqueeze(0).unsqueeze(0)
-    print(f'data_tensor: {data_tensor}')
+    # print(f'data_tensor: {data_tensor}')
     output = model(data_tensor)
     output = torch.softmax(output, dim=1)
-    print(f' 预测结果 {output}')
+    output = output.detach().numpy().tolist()[0]
+    # print(f' 预测结果 {output}')
+    return output
 
 if __name__ == "__main__":
     # analysis([
@@ -38,16 +36,34 @@ if __name__ == "__main__":
         player = game.current_player
         print(f"Player {player}, it's your turn.")
         move = input("Enter your move (x, y): ")
-        try:
-            x, y = move.split(",")
-            x, y = int(x), int(y)
-            game.make_move(x,y)
-            analysis(game.board)
+        # try:
+        x, y = move.split(",")
+        x, y = int(x), int(y)
+        game.make_move(x,y)
+        game.check_win()
+        game.print_board()
+        if game.winner is not None:
+            break
+        idx = game.current_player
+        # 机器人开始走棋
+        actions = game.get_legal_actions()
+        score = 0
+        act = None
+        for action in actions:
+             new_game = game.copy()
+             new_game.make_move(action[0],action[1])
+             sc = analysis(new_game.board)[idx]
+             if sc > score:
+                act = action
+                score = sc
+        if act is not None:
+            print(f'ai 胜率为:{score:.4f}')
+            game.make_move(act[0],act[1])
+            game.print_board()
             game.check_win()
-            game.print_board()
-        except:
-            print("Invalid move. Try again.")
-            game.print_board()
-            continue
+        # except:
+        #     print("Invalid move. Try again.")
+        #     game.print_board()
+        #     continue
     game.print_board()
     print(f"Game over. Winner: {game.winner}")
