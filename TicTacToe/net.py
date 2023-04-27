@@ -37,7 +37,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class CNNModel(nn.Module):
     def __init__(self):
         super(CNNModel, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
+        self.conv1 = nn.Conv2d(1, 32, 3, padding=1) # 卷积华
         self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
         self.fc1 = nn.Linear(64 * 3 * 3, 128)
         self.fc2 = nn.Linear(128, 64)  # 修改隐藏层为三层
@@ -46,8 +46,12 @@ class CNNModel(nn.Module):
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
+        # 将输入张量 x 的形状变为 (-1, 64 3 3)。
+        # 其中 -1 表示该维度的大小由其他维度推断得出，
+        # 64 3 3 表示该张量的总元素个数为 64 3 3 个。
+        # 这个操作通常用于将卷积层的输出张量展平成一维向量，以便于后续的全连接层处理
         x = x.view(-1, 64 * 3 * 3)
-        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc1(x)) # 将输入 x 传入第一个全连接层 fc1，然后使用 ReLU 激活函数进行非线性变换
         x = F.relu(self.fc2(x))  # 隐藏层为三层
         x = self.fc3(x)  # 输出一个三元组
         return x
