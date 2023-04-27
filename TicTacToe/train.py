@@ -3,7 +3,7 @@ import torch.optim as optim
 import torch.nn as nn
 import numpy as np
 
-from net import LSTMModel
+from net import CNNModel
 
 # train_data 变量应该是一个输入张量的列表，其中每个张量表示一个单独的游戏棋盘状态。每个张量的形状应该是 (1, 15, 15)，表示单个通道（因为游戏棋盘是灰度的）和一个 15x15 的单元格网格
 train_data = np.load('game_data/train_data.npy')
@@ -18,7 +18,7 @@ hidden_size = 128
 num_layers = 1
 num_classes = 3
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = LSTMModel(input_size, hidden_size, num_layers, num_classes).to(device)
+model = CNNModel().to(device)
 # 定义损失函数和优化器
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -28,28 +28,28 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # model.load_state_dict(torch.load('model/model.pth'))
 # optimizer.load_state_dict(torch.load('model/optimizer.pth'))
 
-# 更新模型的参数
-num_epochs = 10
-for epoch in range(num_epochs):
+def train(net, train_loader, optimizer, criterion, device):
+    net.train()
     running_loss = 0.0
-    for i, data in enumerate(train_data):
-        # print(f'data: {data}')
-        # print(f'label: {train_labels[i]}')
-
-        data = torch.from_numpy(data)
-        data = data.reshape(-1,3,3).to(device)
-        label = torch.tensor([train_labels[i]], dtype=torch.long)
-        label = label.to(device)
-        # 前向传递
-        outputs = model(data)
-        loss = criterion(outputs, label)
-        # 反向传播和优化
+    for i, data in enumerate(train_loader, 0):
+        inputs = torch.from_numpy(data).float()
+        labels = torch.tensor([train_labels[i]], dtype=torch.long)
+        inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
+        inputs = torch.unsqueeze(inputs, 0)
+        outputs = net(inputs)
+        loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
-        # 打印统计信息
-        if (i+1) % 100 == 0:
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, i+1, len(train_data), loss.item()))
+        running_loss += loss.item()
+    return running_loss / len(train_loader)
+
+
+# 更新模型的参数
+num_epochs = 30
+for epoch in range(num_epochs):
+    train_loss = train(model, train_data, optimizer, criterion, device)
+    print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}")
 
     # 保存模型和优化器的状态
     torch.save(model.state_dict(), 'model/model.pth')

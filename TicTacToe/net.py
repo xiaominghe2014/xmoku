@@ -27,19 +27,27 @@ import torch.nn.functional as F
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+# 根据经验，用于下棋游戏双方胜率预测的神经网络模型最好使用卷积神经网络（Convolutional Neural Network，CNN）。CNN 可以有效地处理图像数据，而游戏棋盘可以看作是一个二维图像。因此，使用 CNN 可以更好地提取游戏棋盘的特征，从而更准确地预测双方的胜率。
+
+# 在提取特征方面，可以使用多个卷积层和池化层来逐步提取游戏棋盘的特征。在输出层方面，可以使用一个或多个全连接层来预测双方的胜率。此外，为了防止过拟合，可以在 CNN 中添加一些正则化技术，如 Dropout 和 L2 正则化。
+
+# 以下是一个使用 PyTorch 实现的简单的 CNN 模型，可以作为参考
+
 # 构建模型
-class LSTMModel(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes):
-        super(LSTMModel, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_size, num_classes)
+class CNNModel(nn.Module):
+    def __init__(self):
+        super(CNNModel, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
+        self.fc1 = nn.Linear(64 * 3 * 3, 128)
+        self.fc2 = nn.Linear(128, 64)  # 修改隐藏层为三层
+        self.fc3 = nn.Linear(64, 3)  # 修改输出层为一个三元组
 
     def forward(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device).float()
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device).float()
-        x = x.to(torch.float32)
-        out, _ = self.lstm(x, (h0, c0))
-        out = self.fc(out[:, -1, :])
-        return out
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = x.view(-1, 64 * 3 * 3)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))  # 隐藏层为三层
+        x = self.fc3(x)  # 输出一个三元组
+        return x

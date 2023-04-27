@@ -3,7 +3,7 @@ from ticTacToe import TicTacToe
 
 import sys
 
-from net import LSTMModel
+from net import CNNModel
 import torch
 import numpy as np
 # 加载模型
@@ -13,25 +13,25 @@ hidden_size = 128
 num_layers = 1
 num_classes = 3
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = LSTMModel(input_size, hidden_size, num_layers, num_classes).to(device)
+model = CNNModel()
 model.load_state_dict(torch.load('model/model.pth'))
 
 # 将模型设置为评估模式
 model.eval()
 
 def analysis(board):
-    data_tensor = torch.Tensor(board)
+    data_tensor = torch.Tensor(board).unsqueeze(0).unsqueeze(0)
     print(f'data_tensor: {data_tensor}')
     output = model(data_tensor)
     output = torch.softmax(output, dim=1)
     print(f' 预测结果 {output}')
 
 if __name__ == "__main__":
-    # analysis([[
+    # analysis([
     #     [0,1,0],
     #     [0,1,0],
     #     [0,1,0]
-    # ]])
+    # ])
     game = TicTacToe()
     game.print_board()
     while game.winner is None:
@@ -42,7 +42,7 @@ if __name__ == "__main__":
             x, y = move.split(",")
             x, y = int(x), int(y)
             game.make_move(x,y)
-            analysis([game.board])
+            analysis(game.board)
             game.check_win()
             game.print_board()
         except:
