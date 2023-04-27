@@ -3,9 +3,9 @@ import math
 
 # 定义蒙特卡洛树节点
 class MonteCarloTreeNode:
-    def __init__(self, state, action=None, parent=None):
+    def __init__(self, state, action=None, parent=None, prior=0.):
         self.state = state # 游戏状态
-        self.prior = None # 先验概率
+        self.prior = prior # 先验概率
         self.player = state.current_player
         self.action = action
         self.parent = parent
@@ -44,7 +44,7 @@ class MonteCarloTreeNode:
     def ucb(self):
         if self.visits == 0:
             return float('inf')
-        return self.win / self.visits + 1.41 * math.sqrt(math.log(self.parent.visits) / self.visits)
+        return (self.win / self.visits + self.prior) + 1.41 * math.sqrt(math.log(self.parent.visits) / self.visits)
 
     def is_root(self):
         return self.parent is None
