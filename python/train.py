@@ -13,7 +13,7 @@ train_data = np.load('game_data/train_data.npy')
 train_labels = np.load('game_data/train_labels.npy')
 
 # 初始化网络和优化器
-net = Net()
+net = Net(num_experts=3, input_size=10, hidden_size=20, output_size=2)
 optimizer = optim.SGD(net.parameters(), lr=0.01)
 
 # 定义损失函数
