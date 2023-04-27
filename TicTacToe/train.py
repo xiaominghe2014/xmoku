@@ -20,7 +20,17 @@ num_classes = 3
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = CNNModel().to(device)
 # 定义损失函数和优化器
+
+# nn.CrossEntropyLoss() 是一个用于多分类问题的损失函数。
+# 它将 softmax 函数应用于模型的输出，将输出转换为概率分布，
+# 然后计算预测概率分布与实际概率分布之间的交叉熵。
+# 在训练期间，它将最小化预测概率分布与实际概率分布之间的差异，从而使模型更好地预测类别。
 criterion = nn.CrossEntropyLoss()
+
+# Adam优化器来更新模型的参数。
+# Adam是一种常用的优化算法，
+# 它结合了Adagrad和RMSprop的优点，能够自适应地调整每个参数的学习率，并且具有较好的收敛性能。
+# 在这里，lr=0.001表示学习率为0.001。
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 
