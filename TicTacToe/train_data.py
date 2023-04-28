@@ -1,6 +1,13 @@
 from ticTacToe import TicTacToe
 import numpy as np
 
+"""
+训练说明:
+如果已经有模型的话：
+    1. 可以调用模型训练
+    2. 如果有效操作全部为唯一结果，则本局训练结束，录入数据，可以迭代训练，向前回溯胜率计算
+"""
+
 NUM_GAMES = 1_000
 train_data = []
 train_labels = []
