@@ -47,17 +47,23 @@ if __name__ == "__main__":
         idx = game.current_player
         # 机器人开始走棋
         actions = game.get_legal_actions()
-        score = 0
+        score = -2
         act = None
+        rate = None
         for action in actions:
              new_game = game.copy()
              new_game.make_move(action[0],action[1])
-             sc = analysis(new_game.board)[idx]
+             rate = analysis(new_game.board)
+             print(f'rate:{rate}')
+             p = rate[1]
+             a = rate[2]
+             sc = a-p
+             print(f'sc:{sc}')
              if sc > score:
                 act = action
                 score = sc
         if act is not None:
-            print(f'ai 胜率为:{score:.4f}')
+            print(f'平局:{rate[0]:.4f},玩家胜率:{rate[1]:.4f}, ai胜率:{rate[2]:.4f}')
             game.make_move(act[0],act[1])
             game.print_board()
             game.check_win()

@@ -46,6 +46,15 @@ def train(net, train_loader, optimizer, criterion, device):
         labels = torch.tensor([train_labels[i]], dtype=torch.long)
         inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
+        
+        # 数据增强
+        # 因为棋盘实际上是中心对称的，左右翻转和上下翻转都是等价的
+        if np.random.rand() > 0.5:
+            if np.random.rand() > 0.5:
+                inputs = torch.flip(inputs, [-1]) # 左右翻转
+            else:
+                inputs = torch.flip(inputs, [-2]) # 上下翻转
+
         inputs = torch.unsqueeze(inputs, 0)
         outputs = net(inputs)
         loss = criterion(outputs, labels)
@@ -56,7 +65,7 @@ def train(net, train_loader, optimizer, criterion, device):
 
 
 # 更新模型的参数
-num_epochs = 30
+num_epochs = 80
 for epoch in range(num_epochs):
     train_loss = train(model, train_data, optimizer, criterion, device)
     print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}")
