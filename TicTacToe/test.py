@@ -1,7 +1,7 @@
 
-from ticTacToe import TicTacToe
+from tic_tac_toe import TicTacToe
 
-import sys
+import os
 
 from net import CNNModel
 import torch
@@ -10,26 +10,30 @@ import numpy as np
 # 实例化模型
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = CNNModel()
-model.load_state_dict(torch.load('model/model.pth'))
+model_path = 'model/model.tar'
+
+if os.path.exists(model_path):
+    model_cfg = torch.load(model_path)
+    model.load_state_dict(model_cfg['model'])
 
 # 将模型设置为评估模式
 model.eval()
 
 def analysis(board):
     data_tensor = torch.Tensor(board).unsqueeze(0).unsqueeze(0)
+    # labels = torch.tensor([-1], dtype=torch.long)
     # print(f'data_tensor: {data_tensor}')
-    output = model(data_tensor)
-    output = torch.softmax(output, dim=1)
-    output = output.detach().numpy().tolist()[0]
-    # print(f' 预测结果 {output}')
+    with torch.no_grad():
+        output, _ = model(data_tensor,None)
+        # output = model(data_tensor)
+        output = torch.softmax(output, dim=1)
+        output = output.detach().numpy().tolist()[0]
+        # 将output前三个元素各加 output 最后一个元素的1/3
+        output[:3] = [x + output[-1]/3 for x in output[:3]]
+        output[:3] = [x/sum(output[:3]) for x in output[:3]]
     return output
 
-if __name__ == "__main__":
-    # analysis([
-    #     [0,1,0],
-    #     [0,1,0],
-    #     [0,1,0]
-    # ])
+def test_game():
     game = TicTacToe()
     game.print_board()
     while game.winner is None:
@@ -54,11 +58,9 @@ if __name__ == "__main__":
              new_game = game.copy()
              new_game.make_move(action[0],action[1])
              rate = analysis(new_game.board)
-             print(f'rate:{rate}')
              p = rate[1]
              a = rate[2]
              sc = a-p
-             print(f'sc:{sc}')
              if sc > score:
                 act = action
                 score = sc
@@ -73,3 +75,25 @@ if __name__ == "__main__":
         #     continue
     game.print_board()
     print(f"Game over. Winner: {game.winner}")
+
+def test_loss():
+    criterion = torch.nn.CrossEntropyLoss()
+    for i in range(10):
+        out_put = tensor = torch.zeros((1, 4))
+        out_put[0][1] = 1
+        label = torch.tensor([3])
+        loss = criterion(out_put, label)
+        print(f'out_put:{out_put},label:{label}->{loss}')
+
+
+if __name__ == "__main__":
+    # print(f'{torch.randn(1, 3, 3, 3)}')
+    out = analysis([
+        [1,2,0],
+        [2,1,1],
+        [1,2,2]
+    ])
+    print(f'{out}')
+    # test_loss()
+    # test_game()
+    

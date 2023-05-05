@@ -37,13 +37,43 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class CNNModel(nn.Module):
     def __init__(self):
         super(CNNModel, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, padding=1) # 卷积华
+        # self.conv1 = nn.Conv2d(1, 32, 3, padding=1) # 卷积化
+        # self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
+        # self.conv3 = nn.Conv2d(64, 128, 3, padding=1)  # 增加卷积层
+        # # self.pool = nn.MaxPool2d(2, 2)
+        # self.fc1 = nn.Linear(128 * 3 * 3, 512)  # 调整全连接层大小
+        # self.fc2 = nn.Linear(512, 256)  # 调整全连接层大小
+        # self.fc3 = nn.Linear(256, 64)  # 增加隐藏层
+        # self.fc4 = nn.Linear(64, 4)  # 增加隐藏层
+        # self.dropout = nn.Dropout(0.1)  # 添加 Dropout
+        # self.regularization = lambda x: torch.sum(torch.pow(x, 2))  # 使用 L2 正则化
+        self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
         self.fc1 = nn.Linear(64 * 3 * 3, 128)
         self.fc2 = nn.Linear(128, 64)  # 修改隐藏层为三层
-        self.fc3 = nn.Linear(64, 3)  # 修改输出层为一个三元组
+        self.fc3 = nn.Linear(64, 4)  # 修改输出层为一个三元组
 
-    def forward(self, x):
+    def forward(self, x, y):
+        # x = F.relu(self.conv1(x))
+        # x = F.relu(self.conv2(x))
+        # x = F.relu(self.conv3(x))  # 增加卷积层
+        # x = x.view(-1, 128 * 3 * 3)
+        # x = F.relu(self.fc1(x))
+        # # x = self.dropout(x)  # 添加 Dropout
+        # x = F.relu(self.fc2(x))
+        # # x = self.dropout(x)  # 添加 Dropout
+        # x = F.relu(self.fc3(x))  # 增加隐藏层
+        # # x = self.dropout(x)  # 添加 Dropout
+        # x = self.fc4(x)
+        loss = 0
+        if y is not None:
+            v = y.item()
+            # 创建一个形状为 [1, 4] 的张量
+            # y_rate = torch.tensor([[0, 0, 0, 0]]).float()
+            # y_rate[0][v-1] = 1.0
+            # x_rate = torch.softmax(x, dim=1)
+            # # print(f'x_rate:{x_rate},y_rate:{y_rate}')
+            # loss = F.mse_loss(x_rate, y_rate) + self.regularization(self.fc1.weight) + self.regularization(self.fc2.weight) + self.regularization(self.fc3.weight) + self.regularization(self.fc4.weight)  # 计算损失
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         # 将输入张量 x 的形状变为 (-1, 64 3 3)。
@@ -54,4 +84,4 @@ class CNNModel(nn.Module):
         x = F.relu(self.fc1(x)) # 将输入 x 传入第一个全连接层 fc1，然后使用 ReLU 激活函数进行非线性变换
         x = F.relu(self.fc2(x))  # 隐藏层为三层
         x = self.fc3(x)  # 输出一个三元组
-        return x
+        return x, loss

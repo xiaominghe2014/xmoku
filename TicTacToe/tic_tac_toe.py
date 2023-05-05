@@ -2,14 +2,14 @@ import copy
 from mcts import MonteCarloTreeSearch
 
 class TicTacToe:
-    def __init__(self):
+    def __init__(self, prior_call=None):
         self.current_player = 1
         self.winner = None
         self.move_history = [] # 添加一个实例变量，用于保存走子步骤
         self.w = 3
         self.h = 3
         self.board = [[0 for j in range(self.h)] for i in range(self.w)]
-        self.mcts = MonteCarloTreeSearch(self)
+        self.mcts = MonteCarloTreeSearch(self, prior_call)
 
     def opponet(self):
         if self.current_player == 1:
@@ -75,6 +75,9 @@ class TicTacToe:
         else:
             print('No move to undo')
             return False
+    
+    def last_move_player(self):
+        return self.opponet()
 
     def check_win(self):
         for i in range(3):
@@ -109,4 +112,15 @@ class TicTacToe:
         return action
 
     def get_train_data(self):
+        if self.winner is None:
+            return (self.board, 3)
         return (self.board, self.winner)
+
+
+    def rate_check(self, rate):
+        if rate[0]> 0.99:
+            self.winner = 0
+        elif rate[1]> 0.99:
+            self.winner = 1
+        elif rate[2]> 0.99:
+            self.winner = 2

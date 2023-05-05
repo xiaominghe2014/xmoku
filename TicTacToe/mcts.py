@@ -19,10 +19,12 @@ class MonteCarloTreeNode:
     def get_legal_actions(self):
         return self.state.get_legal_actions()
 
-    def add_child(self, action):
+    def add_child(self, action, prior_call):
         st = self.state.copy()
         if self.action is not None:
             st.make_move(action[0],action[1])
+            if prior_call is not None:
+                self.prior = prior_call(st)[st.last_move_player()]
         node = MonteCarloTreeNode(st, action, self)
         self.untried_actions.remove(action)
         self.children.append(node)
@@ -54,8 +56,9 @@ class MonteCarloTreeNode:
 
 
 class MonteCarloTreeSearch:
-    def __init__(self, state):
+    def __init__(self, state, prior_call):
         self.state = state
+        self.prior_call = prior_call
     
     def get_action(self, searchCnt):
         # 构建根节点
@@ -70,7 +73,7 @@ class MonteCarloTreeSearch:
             # 扩展
             if node.untried_actions != []:
                 a = random.choice(node.untried_actions)
-                node = node.add_child(a)
+                node = node.add_child(a, self.prior_call)
             # 回溯
             while node != None:
                 node.update()
